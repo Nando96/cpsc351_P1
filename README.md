@@ -1,1 +1,4 @@
-# cpsc351_P1
+# cpsc351
+Group members:
+
+Fernando Mendoza Mendoza96@csu.fullerton.edu
