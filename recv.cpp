@@ -120,7 +120,7 @@ void mainLoop()
 	/* Keep receiving until the sender set the size to 0, indicating that
  	 * there is no more data to send
  	 */	
-
+	msgrcv(msqid, *sharedMemPtr, msgSize, msgflg);
 	while(msgSize != 0)
 	{	
 		/* If the sender is not telling us that we are done, then get to work */
@@ -136,6 +136,7 @@ void mainLoop()
  			 * I.e. send a message of type RECV_DONE_TYPE (the value of size field
  			 * does not matter in this case). 
  			 */
+			msgsnd(msqid,*sharedMemPtr, msgSize, msgflg);
 		}
 		/* We are done */
 		else
@@ -184,7 +185,8 @@ int main(int argc, char** argv)
  	 * queues and shared memory before exiting. You may add the cleaning functionality
  	 * in ctrlCSignal().
  	 */
-	int count			
+	signal(SIGINT, ctrlCSignal);
+				
 	/* Initialize */
 	init(shmid, msqid, sharedMemPtr);
 	
@@ -192,6 +194,6 @@ int main(int argc, char** argv)
 	mainLoop();
 
 	/** TODO: Detach from shared memory segment, and deallocate shared memory and message queue (i.e. call cleanup) **/
-		
+	cleanUP(shmid, msqid, sharedMemPtr);	
 	return 0;
 }
