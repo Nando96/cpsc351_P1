@@ -48,8 +48,45 @@ void init(int& shmid, int& msqid, void*& sharedMemPtr)
 	/* TODO: Create a message queue */
 	/* Store the IDs and the pointer to the shared memory region in the corresponding parameters */
 	
+	//1 make keyfile.txt
+	std::ofstream outfile ("keyfile.txt");
+	outfile << "Hellow world";
+	outfile.close();
+
+	//2 generate key
+	key_t key = ftok("keyfile.txt", 'a');
+	if (hey < 0){
+	perror("key");
+	exit(-1)
+	
+	//3
+	//Get id of the shared memory segment
+	shmid = shget(key, SHARED_MEMORY_CHUNK_SIZE, 0644|IPC_CREAT);
+	if (shmid < 0){
+	perror("shmid");
+	exit(-1);
+	}
+	//Attach to the shared memory
+	sharedMemPtr = shmat(shmid,NULL,0);
+
+	if(sharedMemPtr < (void*)0){
+	perror("sharedMemPtr");
+	exit(-1);
+	}
+	printf("shared contents: %s\n", sharedMemPtr);
+
+	//Attach to the message queue
+	msqid = msgget(key, 0644|IPC_CREAT);
+
+	if(msquid < 0){
+	perror("msqid");
+	exit(-1);
+	}
+	/* Store the IDs and the pointer to the shared memory region in the corresponding parameters */
+
+	
 }
- 
+
 
 /**
  * The main loop
@@ -121,10 +158,11 @@ void mainLoop()
 void cleanUp(const int& shmid, const int& msqid, void* sharedMemPtr)
 {
 	/* TODO: Detach from shared memory */
-	
+	shmdt(sharedMemPtr);
 	/* TODO: Deallocate the shared memory chunk */
-	
+	shmctl(shmid, IPC_RMID, NULL);
 	/* TODO: Deallocate the message queue */
+	shmctl(msqid, IPC_RMID, NULL);
 }
 
 /**
@@ -146,7 +184,7 @@ int main(int argc, char** argv)
  	 * queues and shared memory before exiting. You may add the cleaning functionality
  	 * in ctrlCSignal().
  	 */
-				
+	int count			
 	/* Initialize */
 	init(shmid, msqid, sharedMemPtr);
 	
