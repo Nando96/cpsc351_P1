@@ -4,11 +4,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "msg.h"    /* For the message struct */
-
+#include <fstream>
+#include <iostream>
+#include "msg.h"
 
 /* The size of the shared memory chunk */
 #define SHARED_MEMORY_CHUNK_SIZE 1000
+
+using namespace std;
 
 /* The ids for the shared memory segment and the message queue */
 int shmid, msqid;
@@ -50,26 +53,26 @@ void init(int& shmid, int& msqid, void*& sharedMemPtr)
 	
 	//1 make keyfile.txt
 	std::ofstream outfile ("keyfile.txt");
-	outfile << "Hellow world";
+	outfile << "Hello world";
 	outfile.close();
 
 	//2 generate key
 	key_t key = ftok("keyfile.txt", 'a');
-	if (hey < 0){
+	if (key < 0){
 	perror("key");
-	exit(-1)
-	
+	exit(-1);
+	}
 	//3
 	//Get id of the shared memory segment
-	shmid = shget(key, SHARED_MEMORY_CHUNK_SIZE, 0644|IPC_CREAT);
+	shmid = shmget(key, SHARED_MEMORY_CHUNK_SIZE, 0644|IPC_CREAT);
 	if (shmid < 0){
 	perror("shmid");
 	exit(-1);
 	}
 	//Attach to the shared memory
-	sharedMemPtr = shmat(shmid,NULL,0);
+	sharedMemPtr = shmat(shmid,(void*)0,0);
 
-	if(sharedMemPtr < (void*)0){
+	if(sharedMemPtr < (char*)0){
 	perror("sharedMemPtr");
 	exit(-1);
 	}
@@ -78,7 +81,7 @@ void init(int& shmid, int& msqid, void*& sharedMemPtr)
 	//Attach to the message queue
 	msqid = msgget(key, 0644|IPC_CREAT);
 
-	if(msquid < 0){
+	if(msqid < 0){
 	perror("msqid");
 	exit(-1);
 	}
@@ -91,8 +94,8 @@ void init(int& shmid, int& msqid, void*& sharedMemPtr)
 /**
  * The main loop
  */
-void mainLoop()
-{
+void mainLoop(){
+
 	/* The size of the mesage */
 	int msgSize = 0;
 	
@@ -105,7 +108,7 @@ void mainLoop()
 		perror("fopen");	
 		exit(-1);
 	}
-		
+printf("starting real mainloop\n");		
     /* TODO: Receive the message and get the message size. The message will 
      * contain regular information. The message will be of SENDER_DATA_TYPE
      * (the macro SENDER_DATA_TYPE is defined in msg.h).  If the size field
@@ -120,7 +123,12 @@ void mainLoop()
 	/* Keep receiving until the sender set the size to 0, indicating that
  	 * there is no more data to send
  	 */	
-	msgrcv(msqid, *sharedMemPtr, msgSize, msgflg);
+	message tempMess;
+	if(msgrcv(msqid, &tempMess, sizeof(tempMess) , SENDER_DATA_TYPE,0)<0){
+		perror("msgrcv");	
+	}
+	msgSize = tempMess.size;
+printf("entering msgSize loop\n");
 	while(msgSize != 0)
 	{	
 		/* If the sender is not telling us that we are done, then get to work */
@@ -136,7 +144,16 @@ void mainLoop()
  			 * I.e. send a message of type RECV_DONE_TYPE (the value of size field
  			 * does not matter in this case). 
  			 */
-			msgsnd(msqid,*sharedMemPtr, msgSize, msgflg);
+			tempMess.mtype = RECV_DONE_TYPE;//set message to RCV_DONE_TYPE
+printf("we are rdy for next chunk\n");
+			if(msgsnd(msqid,&tempMess, 0, 0)<0){
+				perror("msgsnd");
+			}
+			if(msgrcv(msqid,&tempMess,sizeof(tempMess) , SENDER_DATA_TYPE,0)<0){
+				perror("msgrcv");
+			}
+			msgSize = tempMess.size;//get current msgSize to prevent inf loop
+printf("got new msg\n");
 		}
 		/* We are done */
 		else
@@ -158,12 +175,19 @@ void mainLoop()
 
 void cleanUp(const int& shmid, const int& msqid, void* sharedMemPtr)
 {
+printf("Cleaning\n");
 	/* TODO: Detach from shared memory */
-	shmdt(sharedMemPtr);
+	if(shmdt(sharedMemPtr)<0){
+		perror("shmdt");
+	}
 	/* TODO: Deallocate the shared memory chunk */
-	shmctl(shmid, IPC_RMID, NULL);
+	if(shmctl(shmid, IPC_RMID, NULL)<0){
+		perror("shmctl");
+	}
 	/* TODO: Deallocate the message queue */
-	shmctl(msqid, IPC_RMID, NULL);
+	if(msgctl(msqid, IPC_RMID, NULL)<0){
+		perror("msgctl");
+	}
 }
 
 /**
@@ -185,15 +209,16 @@ int main(int argc, char** argv)
  	 * queues and shared memory before exiting. You may add the cleaning functionality
  	 * in ctrlCSignal().
  	 */
+printf("stopper\n");
 	signal(SIGINT, ctrlCSignal);
-				
+printf("init\n");				
 	/* Initialize */
 	init(shmid, msqid, sharedMemPtr);
-	
+printf("mainloop\n");	
 	/* Go to the main loop */
 	mainLoop();
 
 	/** TODO: Detach from shared memory segment, and deallocate shared memory and message queue (i.e. call cleanup) **/
-	cleanUP(shmid, msqid, sharedMemPtr);	
+	cleanUp(shmid, msqid, sharedMemPtr);	
 	return 0;
 }

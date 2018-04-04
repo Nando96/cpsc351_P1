@@ -1,11 +1,10 @@
-
 #include <sys/shm.h>
 #include <sys/msg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "msg.h"    /* For the message struct */
 #include <fstream> ////for making files
+#include "msg.h"    /* For the message struct */
 
 /* The size of the shared memory chunk */
 #define SHARED_MEMORY_CHUNK_SIZE 1000
@@ -38,15 +37,16 @@ void init(int& shmid, int& msqid, void*& sharedMemPtr)
 	 */
     //1
 	//makes the keyfile.txt
+	printf("making keyfile\n");
     std::ofstream outfile ("keyfile.txt");
     outfile << "Hello world";
     outfile.close();
     //2
 	//gets the key
 	key_t key = ftok("keyfile.txt", 'a');
-  if(hey <0){
+  if(key <0){
     perror("key");
-    exit(-1)
+    exit(-1);
   }
     //3
     //use the key to do the following TODOs V
@@ -59,9 +59,9 @@ void init(int& shmid, int& msqid, void*& sharedMemPtr)
         exit(-1);
     }
 	/* TODO: Attach to the shared memory */
-    sharedMemPtr = shmat(shmid,NULL,0);
+    sharedMemPtr = shmat(shmid,(void*)0,0);
 
-    if(sharedMemPtr < (void*)0){
+    if(sharedMemPtr < (char*)0){
         perror("sharedMemPtr"); //error msg
         exit(-1);
     }
@@ -88,6 +88,7 @@ void init(int& shmid, int& msqid, void*& sharedMemPtr)
 void cleanUp(const int& shmid, const int& msqid, void* sharedMemPtr)
 {
 	/* TODO: Detach from shared memory */
+    printf("cleaning up\n");
     int detach_return = shmdt(sharedMemPtr);// detaches shared mem
     if(detach_return <0){
         perror("detach_return");//error msg
@@ -102,6 +103,7 @@ void cleanUp(const int& shmid, const int& msqid, void* sharedMemPtr)
  */
 void send(const char* fileName)
 {
+printf("starting send\n");
 	/* Open the file for reading */
 	FILE* fp = fopen(fileName, "r");
 
@@ -119,7 +121,7 @@ void send(const char* fileName)
 		perror("fopen");
 		exit(-1);
 	}
-
+printf("reading loop\n");
 	/* Read the whole file */
 	while(!feof(fp))
 	{
@@ -140,30 +142,33 @@ void send(const char* fileName)
         //set message type with ".mtype ="
         //int msgsnd ( int msqid, struct msgbuf *msgp, int msgsz, int msgflg );
         //msgflag can be set to zero or IPC_NOWAIT
+printf("sending to receiver\n");
          sndMsg.mtype = SENDER_DATA_TYPE;
-        int sndMsg_return = msgsnd(msqid,&sndMsg,sizeof(sndMsg),0);
-        if(sndMsg_return <0){
+       
+        if(msgsnd(msqid,&sndMsg,sizeof(sndMsg),0) <0){
             perror("msgsnd: ");
             exit(-1);
         }
+printf("please work T_T\n");
 
 		/* TODO: Wait until the receiver sends us a message of type RECV_DONE_TYPE telling us
  		 * that he finished saving the memory chunk.
          */
         //msgrcv(int msqid, void *msgp, size_t msgsz, long int msgtyp,int msgflg);
-        int msgrcv_return = msgrcv(msqid,&rcvMsg,0,RECV_DONE_TYPE,0);
-        if(msgrcv_return <0){
+printf("waiting for receiver\n");
+        if(msgrcv(msqid,&rcvMsg,sizeof(sndMsg) ,RECV_DONE_TYPE,0) <0){
             perror("msgrcv: ");
             exit(-1);
         }
 	}
 
-
+printf("end send loop\n");
 	/** TODO: once we are out of the above loop, we have finished sending the file.
  	  * Lets tell the receiver that we have nothing more to send. We will do this by
  	  * sending a message of type SENDER_DATA_TYPE with size field set to 0.
 	  */
-        if(msgsnd(msqid,&sndMsg,0,0)<0){
+	sndMsg.size = 0;
+        if(msgsnd(msqid,&sndMsg,sizeof(sndMsg) ,0)<0){
         	perror("msgsnd");
             exit(-1);
         }
@@ -176,7 +181,7 @@ void send(const char* fileName)
 
 int main(int argc, char** argv)
 {
-
+	printf("start\n");
 	/* Check the command line arguments */
 	if(argc < 2)
 	{
@@ -185,9 +190,11 @@ int main(int argc, char** argv)
 	}
 
 	/* Connect to shared memory and the message queue */
+	printf("\tinit\n");
 	init(shmid, msqid, sharedMemPtr);
 
 	/* Send the file */
+	printf("\tsending\n");
 	send(argv[1]);
 
 	/* Cleanup */
