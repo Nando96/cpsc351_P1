@@ -45,7 +45,6 @@ end send loop
 cleaning up
 me@cpsc-vm:~/Desktop/cpsc351_P1-master$ 
 
-Terminal 2: ./recv
 me@cpsc-vm:~/Desktop/cpsc351_P1-master$ ./recv
 stopper
 init
