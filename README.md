@@ -14,6 +14,7 @@ guide urls:
 http://beej.us/guide/bgipc/html/multi/shm.html
 http://beej.us/guide/bgipc/html/multi/mq.html
 
+language: C++
 how to run:
   1.run the make file 
   2.open two terminals
