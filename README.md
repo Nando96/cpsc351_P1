@@ -26,3 +26,34 @@ Contributions:
   Fernando Mendoza - worked on sender.cpp, recv.cpp, and testing 
   
   Evan Lam - Started and worked on recv.pp and design report
+
+  Gerardo Varela - testing, review, documantation 
+  
+  Sample Outputs:
+Terminal 1: ./sender keyfile.txt
+me@cpsc-vm:~/Desktop/cpsc351_P1-master$ ./sender keyfile.txt
+start
+	  init
+making keyfile
+shared contents: 
+	  sending
+starting send
+reading loop
+sending to receiver
+waiting for receiver
+end send loop
+cleaning up
+me@cpsc-vm:~/Desktop/cpsc351_P1-master$ 
+
+Terminal 2: ./recv
+me@cpsc-vm:~/Desktop/cpsc351_P1-master$ ./recv
+stopper
+init
+shared contents: Hello world
+mainloop
+starting real mainloop
+entering msgSize loop
+we are rdy for next chunk
+got new msg
+Cleaning
+me@cpsc-vm:~/Desktop/cpsc351_P1-master$ 
