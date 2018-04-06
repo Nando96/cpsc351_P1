@@ -5,13 +5,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <fstream>
-#include <iostream>
 #include "msg.h"
 
 /* The size of the shared memory chunk */
 #define SHARED_MEMORY_CHUNK_SIZE 1000
-
-using namespace std;
 
 /* The ids for the shared memory segment and the message queue */
 int shmid, msqid;
