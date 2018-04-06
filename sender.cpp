@@ -149,7 +149,6 @@ printf("sending to receiver\n");
             perror("msgsnd: ");
             exit(-1);
         }
-printf("please work T_T\n");
 
 		/* TODO: Wait until the receiver sends us a message of type RECV_DONE_TYPE telling us
  		 * that he finished saving the memory chunk.
