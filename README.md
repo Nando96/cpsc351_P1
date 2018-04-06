@@ -22,3 +22,5 @@ how to run:
   
 Contributions:
   Fernando Mendoza - worked on sender.cpp, recv.cpp, and testing 
+  
+  Evan Lam - Started and worked on recv.pp and design report
