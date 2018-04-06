@@ -29,7 +29,7 @@ Contributions:
 
   Gerardo Varela - testing, review, documantation 
   
-  Test Run Outputs:
+  Test Run Outputs:  
 Terminal 1: ./sender keyfile.txt  
 me@cpsc-vm:/Desktop/cpsc351_P1-master$ ./sender keyfile.txt  
 start  
