@@ -52,6 +52,7 @@ void init(int& shmid, int& msqid, void*& sharedMemPtr)
 	/* Store the IDs and the pointer to the shared memory region in the corresponding parameters */
 	
 	//1 make keyfile.txt
+printf("making key\n");
 	std::ofstream outfile ("keyfile.txt");
 	outfile << "Hello world";
 	outfile.close();
@@ -62,21 +63,19 @@ void init(int& shmid, int& msqid, void*& sharedMemPtr)
 	perror("key");
 	exit(-1);
 	}
-	//3
-	//Get id of the shared memory segment
+	//3 Get id of the shared memory segment
 	shmid = shmget(key, SHARED_MEMORY_CHUNK_SIZE, 0644|IPC_CREAT);
 	if (shmid < 0){
 	perror("shmid");
 	exit(-1);
 	}
 	//Attach to the shared memory
-	sharedMemPtr = shmat(shmid,(void*)0,0);
+	sharedMemPtr = shmat(shmid,NULL,0);
 
 	if(sharedMemPtr < (char*)0){
 	perror("sharedMemPtr");
 	exit(-1);
 	}
-	printf("shared contents: %s\n", sharedMemPtr);
 
 	//Attach to the message queue
 	msqid = msgget(key, 0644|IPC_CREAT);
@@ -108,7 +107,7 @@ void mainLoop(){
 		perror("fopen");	
 		exit(-1);
 	}
-printf("starting real mainloop\n");		
+printf("waiting for sender\n");		
     /* TODO: Receive the message and get the message size. The message will 
      * contain regular information. The message will be of SENDER_DATA_TYPE
      * (the macro SENDER_DATA_TYPE is defined in msg.h).  If the size field
@@ -162,6 +161,7 @@ printf("got new msg\n");
 			fclose(fp);
 		}
 	}
+printf("loop is done\n");
 }
 
 
@@ -175,7 +175,6 @@ printf("got new msg\n");
 
 void cleanUp(const int& shmid, const int& msqid, void* sharedMemPtr)
 {
-printf("Cleaning\n");
 	/* TODO: Detach from shared memory */
 	if(shmdt(sharedMemPtr)<0){
 		perror("shmdt");
@@ -203,22 +202,23 @@ void ctrlCSignal(int signal)
 
 int main(int argc, char** argv)
 {
-	
+printf("start recv\n");
 	/* TODO: Install a singnal handler (see signaldemo.cpp sample file).
  	 * In a case user presses Ctrl-c your program should delete message
  	 * queues and shared memory before exiting. You may add the cleaning functionality
  	 * in ctrlCSignal().
  	 */
-printf("stopper\n");
 	signal(SIGINT, ctrlCSignal);
-printf("init\n");				
+printf("\tinit\n");				
 	/* Initialize */
 	init(shmid, msqid, sharedMemPtr);
-printf("mainloop\n");	
+printf("\tmainloop\n");	
 	/* Go to the main loop */
 	mainLoop();
 
 	/** TODO: Detach from shared memory segment, and deallocate shared memory and message queue (i.e. call cleanup) **/
-	cleanUp(shmid, msqid, sharedMemPtr);	
+printf("\tcleaning up\n");
+	cleanUp(shmid, msqid, sharedMemPtr);
+printf("\tDone\n");	
 	return 0;
 }

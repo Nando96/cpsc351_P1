@@ -59,13 +59,12 @@ void init(int& shmid, int& msqid, void*& sharedMemPtr)
         exit(-1);
     }
 	/* TODO: Attach to the shared memory */
-    sharedMemPtr = shmat(shmid,(void*)0,0);
+    sharedMemPtr = shmat(shmid,NULL,0);
 
     if(sharedMemPtr < (char*)0){
         perror("sharedMemPtr"); //error msg
         exit(-1);
     }
-    printf("shared contents: %s\n", sharedMemPtr);
 	/* TODO: Attach to the message queue */
     msqid = msgget(key, 0644|IPC_CREAT);
 
@@ -88,7 +87,6 @@ void init(int& shmid, int& msqid, void*& sharedMemPtr)
 void cleanUp(const int& shmid, const int& msqid, void* sharedMemPtr)
 {
 	/* TODO: Detach from shared memory */
-    printf("cleaning up\n");
     int detach_return = shmdt(sharedMemPtr);// detaches shared mem
     if(detach_return <0){
         perror("detach_return");//error msg
@@ -149,7 +147,6 @@ printf("sending to receiver\n");
             perror("msgsnd: ");
             exit(-1);
         }
-printf("please work T_T\n");
 
 		/* TODO: Wait until the receiver sends us a message of type RECV_DONE_TYPE telling us
  		 * that he finished saving the memory chunk.
@@ -181,7 +178,7 @@ printf("end send loop\n");
 
 int main(int argc, char** argv)
 {
-	printf("start\n");
+	printf("start sender\n");
 	/* Check the command line arguments */
 	if(argc < 2)
 	{
@@ -198,7 +195,8 @@ int main(int argc, char** argv)
 	send(argv[1]);
 
 	/* Cleanup */
+	printf("\tcleaning up\n");
 	cleanUp(shmid, msqid, sharedMemPtr);
-
+	printf("\tDone\n");
 	return 0;
 }
