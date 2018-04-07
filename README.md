@@ -35,7 +35,6 @@ me@cpsc-vm:/Desktop/cpsc351_P1-master$ ./sender keyfile.txt
 start  
 	  init  
 making keyfile  
-shared contents:  
 	  sending  
 starting send  
 reading loop  
@@ -48,7 +47,6 @@ me@cpsc-vm:~/Desktop/cpsc351_P1-master$
 me@cpsc-vm:/Desktop/cpsc351_P1-master$ ./recv  
 stopper  
 init  
-shared contents: Hello world  
 mainloop  
 starting real mainloop  
 entering msgSize loop  
